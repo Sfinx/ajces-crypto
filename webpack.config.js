@@ -30,6 +30,11 @@ var libraryConfig = {
     extensions: ['', '.js']
 	},
 	plugins: PROD_ENV ? [
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false
+      }
+    }),
     new webpack.DefinePlugin({'process.env.NODE_ENV': '"production"'}),
 		new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.NoErrorsPlugin()

@@ -6,47 +6,15 @@
   "scripts": {
     "postinstall": "npm run clean && npm run build:prod",
     "clean": "rm -rf lib/ && mkdir -p lib/",
-    "build": "npm run clean && better-npm-run dev",
-    "build:prod": "npm run clean && better-npm-run prod",
-    "build:test": "better-npm-run build-test",
-    "build:test-node": "better-npm-run build-test-node",
+    "build": "npm run clean && webpack",
+    "build:prod": "npm run clean && NODE_ENV=production webpack -p",
+    "build:test": "webpack --config webpack.test.config.js",
+    "build:test-node": "webpack --config webpack.test.node.config.js",
     "lint": "eslint src/",
     "lint:fix": "eslint --fix src/",
     "test": "webpack --config webpack.test.node.config.js && mocha ./test/test.node.bundle.js",
-    "test:dev": "better-npm-run start-test",
+    "test:dev": "webpack-dev-server --config webpack.test.config.js",
     "test:nsp": "nsp check"
-  },
-  "betterScripts": {
-    "dev": {
-      "command": "webpack",
-      "env": {
-        "NODE_ENV": "development"
-      }
-    },
-    "build-test": {
-      "command": "webpack --config webpack.test.config.js",
-      "env": {
-        "NODE_ENV": "development"
-      }
-    },
-    "build-test-node": {
-      "command": "webpack --config webpack.test.node.config.js",
-      "env": {
-        "NODE_ENV": "development"
-      }
-    },
-    "start-test": {
-      "command": "webpack-dev-server --config webpack.test.config.js",
-      "env": {
-        "NODE_ENV": "development"
-      }
-    },
-    "prod": {
-      "command": "webpack -p",
-      "env": {
-        "NODE_ENV": "production"
-      }
-    }
   },
   "author": "Andy Johnson <andyrjohnson82@gmail.com>",
   "babel": {
@@ -59,7 +27,6 @@
     ]
   },
   "dependencies": {
-    "better-npm-run": "0.0.8",
     "pbkdf2": "^3.0.4",
     "tweetnacl": "^0.14.3",
     "tweetnacl-util": "^0.13.3"

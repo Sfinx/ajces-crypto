@@ -1,5 +1,5 @@
 {
-  "name": "crypto",
+  "name": "ajces-crypto",
   "version": "1.0.0",
   "description": "wrapper functions for cryptographic primitives of tweetnacl",
   "main": "lib/crypto.js",

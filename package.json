@@ -4,7 +4,7 @@
   "description": "wrapper functions for cryptographic primitives of tweetnacl",
   "main": "lib/crypto.js",
   "scripts": {
-    "postinstall": "npm run clean",
+    "postinstall": "npm run clean && npm run build:prod",
     "clean": "rm -rf lib/ && mkdir -p lib/",
     "build": "npm run clean && better-npm-run dev",
     "build:prod": "npm run clean && better-npm-run prod",

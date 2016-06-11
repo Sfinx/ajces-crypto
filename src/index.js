@@ -11,25 +11,23 @@ const decUTF8 = nacl.util.decodeUTF8;
 
 const keyPair = () => {
   let pair = nacl.box.keyPair();
-  let strPair = {
-    publicKey: enc64(pair.publicKey),
-    secretKey: enc64(pair.secretKey)
+  return {
+    pubKey: enc64(pair.publicKey),
+    privKey: enc64(pair.secretKey)
   };
-  return strPair;
 };
 
 const signKeyPair = () => {
   let pair = nacl.sign.keyPair();
-  let strPair = {
-    publicKey: enc64(pair.publicKey),
-    secretKey: enc64(pair.secretKey)
+  return {
+    pubKey: enc64(pair.publicKey),
+    privKey: enc64(pair.secretKey)
   };
-  return strPair;
 };
 
-const agreement = (publicKey, secretKey) => {
-  let pk = dec64(publicKey);
-  let sk = dec64(secretKey);
+const agreement = (pubKey, privKey) => {
+  let pk = dec64(pubKey);
+  let sk = dec64(privKey);
   let uKey = nacl.box.before(pk, sk);
   return enc64(uKey);
 };
@@ -42,7 +40,7 @@ const symEncrypt = (msg, key, salt, iter) => {
   let hKey = pbkdf2.pbkdf2Sync(key, salt, iter, 32, 'sha256');
   let nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
   let cipherText = enc64(nacl.secretbox(decUTF8(msg), nonce, hKey));
-  return {nonce: enc64(nonce), cipherText: cipherText};
+  return {nonce: enc64(nonce), cipherText};
 };
 
 const symDecrypt = (cipherText, nonce, key, salt, iter) => {
@@ -52,37 +50,41 @@ const symDecrypt = (cipherText, nonce, key, salt, iter) => {
   return msg;
 };
 
-const pubEncrypt = (msg, publicKey, secretKey) => {
+const pubEncrypt = (msg, pubKey, privKey) => {
   let nonce = nacl.randomBytes(nacl.box.nonceLength);
   let cipherText = enc64(nacl.box(
-    decUTF8(msg), nonce, dec64(publicKey), dec64(secretKey)));
-  return {nonce: enc64(nonce), cipherText: cipherText};
+    decUTF8(msg), nonce, dec64(pubKey), dec64(privKey)));
+  return {nonce: enc64(nonce), cipherText};
 };
 
-const pubDecrypt = (cipherText, nonce, publicKey, secretKey) => {
+const pubDecrypt = (cipherText, nonce, pubKey, privKey) => {
   let msg = encUTF8(nacl.box.open(
-    dec64(cipherText), dec64(nonce), dec64(publicKey), dec64(secretKey)));
+    dec64(cipherText), dec64(nonce), dec64(pubKey), dec64(privKey)));
   return msg;
 };
 
-const sign = (msg, secretKey) => {
-  let sig = enc64(nacl.sign.detached(decUTF8(msg), dec64(secretKey)));
-  return {msg: msg, sig: sig};
+const sign = (msg, privKey) => {
+  let sig = enc64(nacl.sign.detached(decUTF8(msg), dec64(privKey)));
+  return {msg, sig};
 };
 
-const verify = (msg, sig, publicKey) => {
-  return nacl.sign.detached.verify(decUTF8(msg), dec64(sig), dec64(publicKey));
+const verify = (msg, sig, pubKey) => {
+  return nacl.sign.detached.verify(decUTF8(msg), dec64(sig), dec64(pubKey));
 };
 
 module.exports = {
-  keyPair: keyPair,
-  signKeyPair: signKeyPair,
-  agreement: agreement,
-  getRandomKey: getRandomKey,
-  symEncrypt: symEncrypt,
-  symDecrypt: symDecrypt,
-  pubEncrypt: pubEncrypt,
-  pubDecrypt: pubDecrypt,
-  sign: sign,
-  verify: verify
+  enc64,
+  dec64,
+  encUTF8,
+  decUTF8,
+  keyPair,
+  signKeyPair,
+  agreement,
+  getRandomKey,
+  symEncrypt,
+  symDecrypt,
+  pubEncrypt,
+  pubDecrypt,
+  sign,
+  verify
 };

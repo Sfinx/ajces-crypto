@@ -1,5 +1,9 @@
 import {
-	keyPair,
+	enc64,
+  dec64,
+  encUTF8,
+  decUTF8,
+  keyPair,
 	signKeyPair,
 	agreement,
 	symEncrypt,
@@ -11,13 +15,6 @@ import {
 	verify
 } from '../src/index';
 import { expect } from 'chai';
-let nacl = require('tweetnacl');
-nacl.util = require('tweetnacl-util');
-
-let enc64 = nacl.util.encodeBase64;
-let dec64 = nacl.util.decodeBase64;
-let encUTF8 = nacl.util.encodeUTF8;
-let decUTF8 = nacl.util.decodeUTF8;
 
 let keyPair1 = {};
 let keyPair2 = {};
@@ -33,14 +30,14 @@ before(() => {
 
 describe('crypto.js', () => {
 	it('keypair agreement should match', () => {
-		let agree1 = agreement(keyPair1.publicKey, keyPair2.secretKey);
-		let agree2 = agreement(keyPair2.publicKey, keyPair1.secretKey);
+		let agree1 = agreement(keyPair1.pubKey, keyPair2.privKey);
+		let agree2 = agreement(keyPair2.pubKey, keyPair1.privKey);
 		expect(agree1).to.deep.equal(agree2);
 	});
 
 	it('msg should match after symEncrypt/symDecrypt', () => {
-    let agree1 = agreement(keyPair1.publicKey, keyPair2.secretKey);
-		let agree2 = agreement(keyPair2.publicKey, keyPair1.secretKey);
+    let agree1 = agreement(keyPair1.pubKey, keyPair2.privKey);
+		let agree2 = agreement(keyPair2.pubKey, keyPair1.privKey);
 		let iter = 20000;
 		let msg = 'testing 123 super secret';
 		let box = symEncrypt(msg, agree1, 'salt', iter);
@@ -56,16 +53,16 @@ describe('crypto.js', () => {
 
 	it('public key encrypted message should not change after pubEncrypt/pubDecrypt', () => {
 		let msg = 'this is a test, it is only a test';
-		let sBox = pubEncrypt(msg, keyPair1.publicKey, keyPair2.secretKey);
-		let msg2 = pubDecrypt(sBox.cipherText, sBox.nonce, keyPair2.publicKey, keyPair1.secretKey);
+		let sBox = pubEncrypt(msg, keyPair1.pubKey, keyPair2.privKey);
+		let msg2 = pubDecrypt(sBox.cipherText, sBox.nonce, keyPair2.pubKey, keyPair1.privKey);
 
 		expect(msg).to.deep.equal(msg2);
 	});
 
 	it('should make signatures that can be verified', () => {
     let msg = 'test message';
-		let sigBox = sign(msg, signPair1.secretKey);
-		let result = verify(sigBox.msg, sigBox.sig, signPair1.publicKey);
+		let sigBox = sign(msg, signPair1.privKey);
+		let result = verify(sigBox.msg, sigBox.sig, signPair1.pubKey);
 		expect(result).to.equal(true);
 	});
 })

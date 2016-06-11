@@ -69,14 +69,6 @@
 
 	var _chai = __webpack_require__(7);
 
-	var nacl = __webpack_require__(5);
-	nacl.util = __webpack_require__(6);
-
-	var enc64 = nacl.util.encodeBase64;
-	var dec64 = nacl.util.decodeBase64;
-	var encUTF8 = nacl.util.encodeUTF8;
-	var decUTF8 = nacl.util.decodeUTF8;
-
 	var keyPair1 = {};
 	var keyPair2 = {};
 	var signPair1 = {};
@@ -91,14 +83,14 @@
 
 	describe('crypto.js', function () {
 		it('keypair agreement should match', function () {
-			var agree1 = (0, _index.agreement)(keyPair1.publicKey, keyPair2.secretKey);
-			var agree2 = (0, _index.agreement)(keyPair2.publicKey, keyPair1.secretKey);
+			var agree1 = (0, _index.agreement)(keyPair1.pubKey, keyPair2.privKey);
+			var agree2 = (0, _index.agreement)(keyPair2.pubKey, keyPair1.privKey);
 			(0, _chai.expect)(agree1).to.deep.equal(agree2);
 		});
 
 		it('msg should match after symEncrypt/symDecrypt', function () {
-			var agree1 = (0, _index.agreement)(keyPair1.publicKey, keyPair2.secretKey);
-			var agree2 = (0, _index.agreement)(keyPair2.publicKey, keyPair1.secretKey);
+			var agree1 = (0, _index.agreement)(keyPair1.pubKey, keyPair2.privKey);
+			var agree2 = (0, _index.agreement)(keyPair2.pubKey, keyPair1.privKey);
 			var iter = 20000;
 			var msg = 'testing 123 super secret';
 			var box = (0, _index.symEncrypt)(msg, agree1, 'salt', iter);
@@ -114,16 +106,16 @@
 
 		it('public key encrypted message should not change after pubEncrypt/pubDecrypt', function () {
 			var msg = 'this is a test, it is only a test';
-			var sBox = (0, _index.pubEncrypt)(msg, keyPair1.publicKey, keyPair2.secretKey);
-			var msg2 = (0, _index.pubDecrypt)(sBox.cipherText, sBox.nonce, keyPair2.publicKey, keyPair1.secretKey);
+			var sBox = (0, _index.pubEncrypt)(msg, keyPair1.pubKey, keyPair2.privKey);
+			var msg2 = (0, _index.pubDecrypt)(sBox.cipherText, sBox.nonce, keyPair2.pubKey, keyPair1.privKey);
 
 			(0, _chai.expect)(msg).to.deep.equal(msg2);
 		});
 
 		it('should make signatures that can be verified', function () {
 			var msg = 'test message';
-			var sigBox = (0, _index.sign)(msg, signPair1.secretKey);
-			var result = (0, _index.verify)(sigBox.msg, sigBox.sig, signPair1.publicKey);
+			var sigBox = (0, _index.sign)(msg, signPair1.privKey);
+			var result = (0, _index.verify)(sigBox.msg, sigBox.sig, signPair1.pubKey);
 			(0, _chai.expect)(result).to.equal(true);
 		});
 	});
@@ -142,6 +134,7 @@
 
 	var nacl = __webpack_require__(5);
 	nacl.util = __webpack_require__(6);
+	Object.freeze(nacl);
 
 	var enc64 = nacl.util.encodeBase64;
 	var dec64 = nacl.util.decodeBase64;
@@ -150,25 +143,23 @@
 
 	var keyPair = function keyPair() {
 	  var pair = nacl.box.keyPair();
-	  var strPair = {
-	    publicKey: enc64(pair.publicKey),
-	    secretKey: enc64(pair.secretKey)
+	  return {
+	    pubKey: enc64(pair.publicKey),
+	    privKey: enc64(pair.secretKey)
 	  };
-	  return strPair;
 	};
 
 	var signKeyPair = function signKeyPair() {
 	  var pair = nacl.sign.keyPair();
-	  var strPair = {
-	    publicKey: enc64(pair.publicKey),
-	    secretKey: enc64(pair.secretKey)
+	  return {
+	    pubKey: enc64(pair.publicKey),
+	    privKey: enc64(pair.secretKey)
 	  };
-	  return strPair;
 	};
 
-	var agreement = function agreement(publicKey, secretKey) {
-	  var pk = dec64(publicKey);
-	  var sk = dec64(secretKey);
+	var agreement = function agreement(pubKey, privKey) {
+	  var pk = dec64(pubKey);
+	  var sk = dec64(privKey);
 	  var uKey = nacl.box.before(pk, sk);
 	  return enc64(uKey);
 	};
@@ -191,27 +182,31 @@
 	  return msg;
 	};
 
-	var pubEncrypt = function pubEncrypt(msg, publicKey, secretKey) {
+	var pubEncrypt = function pubEncrypt(msg, pubKey, privKey) {
 	  var nonce = nacl.randomBytes(nacl.box.nonceLength);
-	  var cipherText = enc64(nacl.box(decUTF8(msg), nonce, dec64(publicKey), dec64(secretKey)));
+	  var cipherText = enc64(nacl.box(decUTF8(msg), nonce, dec64(pubKey), dec64(privKey)));
 	  return { nonce: enc64(nonce), cipherText: cipherText };
 	};
 
-	var pubDecrypt = function pubDecrypt(cipherText, nonce, publicKey, secretKey) {
-	  var msg = encUTF8(nacl.box.open(dec64(cipherText), dec64(nonce), dec64(publicKey), dec64(secretKey)));
+	var pubDecrypt = function pubDecrypt(cipherText, nonce, pubKey, privKey) {
+	  var msg = encUTF8(nacl.box.open(dec64(cipherText), dec64(nonce), dec64(pubKey), dec64(privKey)));
 	  return msg;
 	};
 
-	var sign = function sign(msg, secretKey) {
-	  var sig = enc64(nacl.sign.detached(decUTF8(msg), dec64(secretKey)));
+	var sign = function sign(msg, privKey) {
+	  var sig = enc64(nacl.sign.detached(decUTF8(msg), dec64(privKey)));
 	  return { msg: msg, sig: sig };
 	};
 
-	var verify = function verify(msg, sig, publicKey) {
-	  return nacl.sign.detached.verify(decUTF8(msg), dec64(sig), dec64(publicKey));
+	var verify = function verify(msg, sig, pubKey) {
+	  return nacl.sign.detached.verify(decUTF8(msg), dec64(sig), dec64(pubKey));
 	};
 
 	module.exports = {
+	  enc64: enc64,
+	  dec64: dec64,
+	  encUTF8: encUTF8,
+	  decUTF8: decUTF8,
 	  keyPair: keyPair,
 	  signKeyPair: signKeyPair,
 	  agreement: agreement,

@@ -2,6 +2,7 @@
 import pbkdf2 from 'pbkdf2';
 let nacl = require('tweetnacl');
 nacl.util = require('tweetnacl-util');
+Object.freeze(nacl);
 
 const enc64 = nacl.util.encodeBase64;
 const dec64 = nacl.util.decodeBase64;

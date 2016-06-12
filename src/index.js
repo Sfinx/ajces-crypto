@@ -72,6 +72,10 @@ const verify = (msg, sig, pubKey) => {
   return nacl.sign.detached.verify(decUTF8(msg), dec64(sig), dec64(pubKey));
 };
 
+const sha512 = (msg) => {
+  return enc64(nacl.hash(msg));
+};
+
 module.exports = {
   enc64,
   dec64,
@@ -86,5 +90,6 @@ module.exports = {
   pubEncrypt,
   pubDecrypt,
   sign,
-  verify
+  verify,
+  sha512
 };

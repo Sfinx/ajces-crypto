@@ -73,7 +73,7 @@ const verify = (msg, sig, pubKey) => {
 };
 
 const sha512 = (msg) => {
-  return enc64(nacl.hash(msg));
+  return enc64(nacl.hash(decUTF8(msg)));
 };
 
 module.exports = {

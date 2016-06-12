@@ -5,6 +5,15 @@ var outputFile = libraryName + '.js';
 var PROD_ENV = process.env.NODE_ENV === 'production' ? 1 : 0;
 var version = JSON.stringify(require('./package.json').version);
 
+var fs = require('fs');
+
+var nodeModules = {};
+fs.readdirSync('node_modules').filter(function(x) {
+  return ['.bin'].indexOf(x) === -1;
+}).forEach(function(mod){
+  nodeModules[mod] = 'commonjs ' + mod;
+});
+
 var libraryConfig = {
 	entry: __dirname + '/src/index.js',
 	devtool: PROD_ENV ? [] : ['inline-source-map'],
@@ -15,6 +24,7 @@ var libraryConfig = {
     libraryTarget: 'umd',
     umdNamedDefine: true
 	},
+  external: PROD_ENV ? nodeModules : '',
   module: {
 		loaders: [
 			{
